@@ -3,7 +3,8 @@ import os,sys
 
 
 # Define data_dict, a dict of SAM web queries with your choice of keys (will be used in the output file name)
-data_dict = { "rolling": "defname: data_MCP2025B_02_DevSample_1e20_bnblight_v10_06_00_02_flatcaf_sbnd and run_number >= 18250 and run_number < 18592 and sbnd.random < 0.02" }
+data_dict = { #"rolling": "defname: data_MCP2025B_02_DevSample_1e20_bnblight_v10_06_00_02_flatcaf_sbnd and run_number >= 18250 and run_number < 18592 and sbnd.random < 0.02",
+              "offbeamlightfull": "defname: data_MCP2025B_02_InTimeCosmics_offbeamlight_v10_06_00_02_flatcaf_sbnd and run_number >= 18250 and run_number < 18592"} # and sbnd.random < 0.02" }
 #"initial": "file_type data and data_tier raw and data_stream bnblight and (run_number 18255 or (run_number 18259 and sbnd.random < 0.74))", 
               #"rolling": "defname: data_MCP2025B_02_DevSample_1e20_bnblight_v10_06_00_02_flatcaf_sbnd and ((run_number >= 18250 and run_number != 18255 and run_number != 18259 and run_number < 18592 and sbnd.random < 0.007) or (run_number 18259 and sbnd.random >= 0.74 and sbnd.random < 0.7439))"}
 #,               "test": "file_type data and data_tier raw and data_stream bnblight and run_number 18255 and sbnd.random < 0.017" }

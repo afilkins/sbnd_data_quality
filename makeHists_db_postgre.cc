@@ -9,11 +9,11 @@
 #include "TTreeReaderValue.h"
 
 // sbn includes
-#include "sbnanaobj/StandardRecord/StandardRecord.h"
+/*#include "sbnanaobj/StandardRecord/StandardRecord.h"
 #include "sbnanaobj/StandardRecord/SRSlice.h"
 #include "sbnanaobj/StandardRecord/SRSliceRecoBranch.h"
 #include "sbnanaobj/StandardRecord/SRPFP.h"
-
+*/
 // std incldes
 #include <fstream>
 #include <iostream>
@@ -23,85 +23,92 @@
 
 void makeHists_db_postgre(std::string inFileName,
                           std::string outFileName,
-                          unsigned int minRun = std::numeric_limits<unsigned int>::min(),//max
-                          unsigned int maxRun = std::numeric_limits<unsigned int>::max(),//min
+                          unsigned int minRun = std::numeric_limits<unsigned int>::min(),//max //Era 1 starts run1825
+                          unsigned int maxRun = std::numeric_limits<unsigned int>::max(),//min //Era 1 ends circa run18593
                           bool debug = false)
 {
   // get the weights stored correctly
   TH1::SetDefaultSumw2(true);
 
+  gInterpreter->GenerateDictionary("vector<vector<float>>", "vector");  
+  gInterpreter->GenerateDictionary("vector<vector<int>>", "vector"); 
+
   // open the file and get the StandardRecord TTree
-  std::unique_ptr<TFile> inFile(TFile::Open(inFileName.c_str(), "READ"));
+  //std::unique_ptr<TFile> inFile(TFile::Open(inFileName.c_str(), "READ"));
+  TFile* inFile=new TFile(inFileName.c_str(), "READ");
   if (debug) std::cout << "In file: " << inFile->GetName() << std::endl;
 
   // set up the reader and values
   // by storing vectors in the TTree we can pluck the leaves as individual values
-  TTreeReader inReader("data_validation_tree", inFile.get());
-  TTreeReaderValue<unsigned int>                     run                    (inReader, "run");
-  TTreeReaderValue<unsigned int>                     subrun                 (inReader, "subrun");
-  TTreeReaderValue<unsigned int>                     event                  (inReader, "event");
-  TTreeReaderValue<float>                            pot                    (inReader, "POT");
-  TTreeReaderValue<int>                              nslc                   (inReader, "nslc");
-  TTreeReaderValue<std::vector<ULong64_t>>           npfp                   (inReader, "slc.npfp");
-  TTreeReaderValue<std::vector<char>>                clear_cosmic           (inReader, "slc.clear_cosmic");
-  TTreeReaderValue<std::vector<float>>               CRLongestTrackDirY     (inReader, "slc.CRLongestTrackDirY");
-  TTreeReaderValue<std::vector<bool>>                FMatchPresent          (inReader, "slc.FMatchPresent");
-  TTreeReaderValue<std::vector<float>>               FMatchLightPE          (inReader, "slc.FMatchLightPE");
-  TTreeReaderValue<std::vector<float>>               FMatchScore            (inReader, "slc.FMatchScore");
-  TTreeReaderValue<std::vector<std::vector<float>>>  trackLength            (inReader, "slc.pfp.trackLength");
-  TTreeReaderValue<std::vector<std::vector<double>>>  showerLength           (inReader, "slc.pfp.showerLength");
-  TTreeReaderValue<std::vector<std::vector<double>>>    trackBestPlane         (inReader, "slc.pfp.trackBestPlane");
-  TTreeReaderValue<std::vector<std::vector<double>>>    showerBestPlane        (inReader, "slc.pfp.showerBestPlane");
-  TTreeReaderValue<std::vector<std::vector<double>>>  trackDirY              (inReader, "slc.pfp.trackDirY");
-  TTreeReaderValue<std::vector<std::vector<double>>>  trackVtxX              (inReader, "slc.pfp.trackVtxX");
-  TTreeReaderValue<std::vector<std::vector<double>>>  trackVtxY              (inReader, "slc.pfp.trackVtxY");
-  TTreeReaderValue<std::vector<std::vector<double>>>  trackVtxZ              (inReader, "slc.pfp.trackVtxZ");
-  TTreeReaderValue<std::vector<std::vector<double>>>    trackNHit1             (inReader, "slc.pfp.trackNHit1");
-  TTreeReaderValue<std::vector<std::vector<double>>>    trackNHit2             (inReader, "slc.pfp.trackNHit2");
-  TTreeReaderValue<std::vector<std::vector<double>>>    trackNHit3             (inReader, "slc.pfp.trackNHit3");
-  TTreeReaderValue<int>                              nflash                 (inReader, "nflash");
-  TTreeReaderValue<std::vector<float>>               flashTimeWidth         (inReader, "flash.timeWidth");
-  TTreeReaderValue<std::vector<float>>               flashTimeSD            (inReader, "flash.timeSD");
-  TTreeReaderValue<std::vector<float>>               flashPE                (inReader, "flash.PE");
-  TTreeReaderValue<int>                              nCRTHit                (inReader, "ncrthit");
-  TTreeReaderValue<std::vector<int>>                 CRTHitPlane            (inReader, "crt_hit.plane");
-  TTreeReaderValue<std::vector<float>>               CRTHitPE               (inReader, "crt_hit.PE");
-  TTreeReaderValue<std::vector<float>>               CRTHitErrX             (inReader, "crt_hit.err_x");
-  TTreeReaderValue<std::vector<float>>               CRTHitErrY             (inReader, "crt_hit.err_y");
-  TTreeReaderValue<std::vector<float>>               CRTHitErrZ             (inReader, "crt_hit.err_z");
-  TTreeReaderValue<int>                              nCRTTrack              (inReader, "ncrt_track");
-  TTreeReaderValue<std::vector<float>>               CRTTrackTime           (inReader, "crt_track.time");
-  TTreeReaderValue<int>                              nCRTPMTMatch           (inReader, "ncrtpmt_match");
-  TTreeReaderValue<std::vector<int>>                 nCRTPMTMatchHit        (inReader, "crtpmt_match.nhit");
-  TTreeReaderValue<std::vector<std::vector<double>>> nCRTPMTMatchHitTimeDiff(inReader, "crtpmt_match.hit.timeDiff");
-  TTreeReaderValue<bool>                             dbRunInfoExists        (inReader, "db.runinfo_exists");
-  TTreeReaderValue<bool>                             dbTriggerDataExists    (inReader, "db.triggerdata_exists");
-  TTreeReaderValue<int>                              dbRun                  (inReader, "db.run");
-  TTreeReaderValue<int>                              dbStart                (inReader, "db.start");
-  TTreeReaderValue<int>                              dbEnd                  (inReader, "db.end");
-  TTreeReaderValue<TString>                          dbConfig               (inReader, "db.config");
-  TTreeReaderValue<double>                           dbCath                 (inReader, "db.cathodeV");
-  TTreeReaderValue<double>                           dbEInd1                (inReader, "db.EInd1V");
-  TTreeReaderValue<double>                           dbEInd2                (inReader, "db.EInd2V");
-  TTreeReaderValue<double>                           dbEColl                (inReader, "db.ECollV");
-  TTreeReaderValue<double>                           dbWInd1                (inReader, "db.WInd1V");
-  TTreeReaderValue<double>                           dbWInd2                (inReader, "db.WInd2V");
-  TTreeReaderValue<double>                           dbWColl                (inReader, "db.WCollV");
-  TTreeReaderValue<int>                              dbNTPC                 (inReader, "db.NTPC");
-  TTreeReaderValue<int>                              dbNPMT                 (inReader, "db.NPMT");
-  TTreeReaderValue<int>                              dbNCRT                 (inReader, "db.NCRT");
-  TTreeReaderValue<int>                              dbTrigSec              (inReader, "db.trigSec");
-  TTreeReaderValue<int>                              dbTrigNanosec          (inReader, "db.trigNanosec");
-  TTreeReaderValue<int>                              dbGateType             (inReader, "db.gateType");
-  TTreeReaderValue<int>                              dbTrigSource           (inReader, "db.trigSource");
-
+  TTree* inTree= (TTree*) inFile->Get("data_validation_tree");
+  //TTreeReader inTree("data_validation_tree", inFile.get());
+  unsigned int                     run                    =0; inTree->SetBranchAddress("run",            &             run                  );
+  unsigned int                     subrun                 =0; inTree->SetBranchAddress("subrun",            &          subrun               );
+  unsigned int                     event                  =0; inTree->SetBranchAddress("event",            &           event                );
+  float                            pot                    =0; inTree->SetBranchAddress("POT",            &             pot                  );
+  int                              nslc                   =0; inTree->SetBranchAddress("nslc",            &            nslc                 );
+  std::vector<ULong64_t>          * npfp                   =0; inTree->SetBranchAddress("slc.npfp",            &        npfp                 );
+  std::vector<char>               * clear_cosmic           =0; inTree->SetBranchAddress("slc.clear_cosmic",         &   clear_cosmic         );   
+  std::vector<float>              * CRLongestTrackDirY     =0; inTree->SetBranchAddress("slc.CRLongestTrackDirY",   &   CRLongestTrackDirY   );   
+  std::vector<bool>               * FMatchPresent          =0; inTree->SetBranchAddress("slc.FMatchPresent",        &   FMatchPresent        );   
+  std::vector<float>              * FMatchLightPE          =0; inTree->SetBranchAddress("slc.FMatchLightPE",        &   FMatchLightPE        );   
+  std::vector<float>              * FMatchScore            =0; inTree->SetBranchAddress("slc.FMatchScore",          &   FMatchScore          );   
+  std::vector<std::vector<float>> *  trackLength            =0; inTree->SetBranchAddress("slc.pfp.trackLength",      &trackLength          );
+  std::vector<std::vector<double>>*  showerLength          =0; inTree->SetBranchAddress("slc.pfp.showerLength",     &   showerLength         );
+  std::vector<std::vector<double>>*  trackBestPlane      =0; inTree->SetBranchAddress("slc.pfp.trackBestPlane",   &     trackBestPlane       );
+  std::vector<std::vector<double>>*  showerBestPlane     =0; inTree->SetBranchAddress("slc.pfp.showerBestPlane",  &     showerBestPlane      );
+  std::vector<std::vector<double>>*  trackDirY             =0; inTree->SetBranchAddress("slc.pfp.trackDirY",  &         trackDirY            );
+  std::vector<std::vector<double>>*  trackVtxX             =0; inTree->SetBranchAddress("slc.pfp.trackVtxX",  &         trackVtxX            );
+  std::vector<std::vector<double>>*  trackVtxY             =0; inTree->SetBranchAddress("slc.pfp.trackVtxY",  &         trackVtxY            );
+  std::vector<std::vector<double>>*  trackVtxZ             =0; inTree->SetBranchAddress("slc.pfp.trackVtxZ",  &         trackVtxZ            );
+  std::vector<std::vector<double>>*  trackNHit1          =0; inTree->SetBranchAddress("slc.pfp.trackNHit1",  &          trackNHit1           );
+  std::vector<std::vector<double>>*  trackNHit2          =0; inTree->SetBranchAddress("slc.pfp.trackNHit2",  &          trackNHit2           );
+  std::vector<std::vector<double>>*  trackNHit3          =0; inTree->SetBranchAddress("slc.pfp.trackNHit3",  &          trackNHit3           );
+  int                               nflash                 =0; inTree->SetBranchAddress("nflash",            &        nflash                 );
+  std::vector<float>              * flashTimeWidth         =0; inTree->SetBranchAddress("flash.timeWidth",     &      flashTimeWidth         );
+  std::vector<float>              * flashTimeSD            =0; inTree->SetBranchAddress("flash.timeSD",        &      flashTimeSD            );
+  std::vector<float>              * flashPE                =0; inTree->SetBranchAddress("flash.PE",            &      flashPE                );
+  int                              nCRTHit                =0; inTree->SetBranchAddress("ncrthit",            &       nCRTHit                );
+  std::vector<int>                * CRTHitPlane            =0; inTree->SetBranchAddress("crt_hit.plane",       &      CRTHitPlane            );
+  std::vector<float>              * CRTHitPE               =0; inTree->SetBranchAddress("crt_hit.PE",           &     CRTHitPE               );
+  std::vector<float>              * CRTHitErrX             =0; inTree->SetBranchAddress("crt_hit.err_x",       &      CRTHitErrX             );
+  std::vector<float>              * CRTHitErrY             =0; inTree->SetBranchAddress("crt_hit.err_y",       &      CRTHitErrY             );
+  std::vector<float>              * CRTHitErrZ             =0; inTree->SetBranchAddress("crt_hit.err_z",       &      CRTHitErrZ             );
+  int                              nCRTTrack              =0; inTree->SetBranchAddress("ncrt_track",          &      nCRTTrack              );
+  std::vector<float>              * CRTTrackTime           =0; inTree->SetBranchAddress("crt_track.time",      &      CRTTrackTime           );
+  int                              nCRTPMTMatch           =0; inTree->SetBranchAddress("ncrtpmt_match",       &      nCRTPMTMatch           );   
+  std::vector<int>                * nCRTPMTMatchHit        =0; inTree->SetBranchAddress("crtpmt_match.nhit",   &      nCRTPMTMatchHit        );   
+  std::vector<std::vector<double>>* nCRTPMTMatchHitTimeDiff=0; inTree->SetBranchAddress("crtpmt_match.hit.timeDiff", &nCRTPMTMatchHitTimeDiff);         
+  /*bool                             dbRunInfoExists        =0; inTree->SetBranchAddress("db.runinfo_exists",    &     dbRunInfoExists        );    
+  bool                             dbTriggerDataExists    =0; inTree->SetBranchAddress("db.triggerdata_exists", &    dbTriggerDataExists    );    
+  int                              dbRun                  =0; inTree->SetBranchAddress("db.run",     &               dbRun                  );
+  int                              dbStart                =0; inTree->SetBranchAddress("db.start",     &             dbStart                );
+  int                              dbEnd                  =0; inTree->SetBranchAddress("db.end",     &               dbEnd                  );
+  TString                          dbConfig               =""; inTree->SetBranchAddress("db.config",     &            dbConfig               );
+  double                           dbCath                 =0; inTree->SetBranchAddress("db.cathodeV",     &          dbCath                 );
+  double                           dbEInd1                =0; inTree->SetBranchAddress("db.EInd1V",     &            dbEInd1                );
+  double                           dbEInd2                =0; inTree->SetBranchAddress("db.EInd2V",     &            dbEInd2                );
+  double                           dbEColl                =0; inTree->SetBranchAddress("db.ECollV",     &            dbEColl                );
+  double                           dbWInd1                =0; inTree->SetBranchAddress("db.WInd1V",     &            dbWInd1                );
+  double                           dbWInd2                =0; inTree->SetBranchAddress("db.WInd2V",     &            dbWInd2                );
+  double                           dbWColl                =0; inTree->SetBranchAddress("db.WCollV",     &            dbWColl                );
+  int                              dbNTPC                 =0; inTree->SetBranchAddress("db.NTPC",     &              dbNTPC                 );
+  int                              dbNPMT                 =0; inTree->SetBranchAddress("db.NPMT",     &              dbNPMT                 );
+  int                              dbNCRT                 =0; inTree->SetBranchAddress("db.NCRT",     &              dbNCRT                 );
+  int                              dbTrigSec              =0; inTree->SetBranchAddress("db.trigSec",    &            dbTrigSec              );
+  int                              dbTrigNanosec          =0; inTree->SetBranchAddress("db.trigNanosec",    &        dbTrigNanosec          ); 
+  int                              dbGateType             =0; inTree->SetBranchAddress("db.gateType",    &           dbGateType             );
+  int                              dbTrigSource           =0; inTree->SetBranchAddress("db.trigSource",    &         dbTrigSource           );
+  */                                                                                                                                        
+  int nEntries=inTree->GetEntries();
+  
   // Get Min/Max runs
-  while (inReader.Next())
+  /*while (inTree.Next())
   {
     minRun = (minRun < *run) ? minRun : *run;
     maxRun = (maxRun > *run) ? maxRun : *run;
   }
-  inReader.Restart();
+  inTree.Restart();*/
   if (debug) std::cout << "Checking Run " << minRun << " to " << maxRun << std::endl;
 
   // Open an output file
@@ -402,56 +409,66 @@ void makeHists_db_postgre(std::string inFileName,
 // read the TTree
   size_t nEvt = 1;
   if (debug) std::cout << "READY TO LOOP" << std::endl;
-  while (inReader.Next())
-  {
+  int loopcount=0;
+  if (debug) cout<< "Will loop over "<<nEntries<<" entries"<<endl;
+  //while (inTree.Next())
+  for(int iEntry=0; iEntry<nEntries; iEntry++){
+    cout<<"iEntry: "<<iEntry<<endl;
+    inTree->GetEntry(iEntry);
+    cout<<"Run: "<<run<<endl;
+    if(debug) cout<<"Loop count: "<<loopcount<<endl;
+    loopcount++;
     // skip explicit tests and non-physics on beam streams
-    //if ((not *dbRunInfoExists) || (not *dbTriggerDataExists))
-    if (not *dbTriggerDataExists)
-      not_inDB->Fill(*run);
-    if ((not (dbConfig->Contains("physics", TString::kIgnoreCase))) || ((*dbGateType == 1) || (*dbGateType == 2)))
-      not_physics->Fill(*run);
-    if (dbConfig->Contains("test", TString::kIgnoreCase))
-      test_config->Fill(*run);
-
+    //if ((not dbRunInfoExists) || (not dbTriggerDataExists))
+    /*if (not dbTriggerDataExists)
+      not_inDB->Fill(run);
+    if ((not (dbConfig.Contains("physics", TString::kIgnoreCase))) || ((dbGateType == 1) || (dbGateType == 2)))
+      not_physics->Fill(run);
+    if (dbConfig.Contains("test", TString::kIgnoreCase))
+      test_config->Fill(run);
+    */
     // fill the ones which require no processing
-    nEventsPerRun->Fill(*run);
-    POTPerRun->Fill(*run, *pot);
-    nSlicePerEvent->Fill(*run, *nslc);
-    runDuration->Fill(*run, *dbEnd - *dbStart);
-    cathodeV ->Fill(*run, *dbCath );
-    EInd1V   ->Fill(*run, *dbEInd1);
-    EInd2V   ->Fill(*run, *dbEInd2);
-    ECollV   ->Fill(*run, *dbEColl);
-    WInd1V   ->Fill(*run, *dbWInd1);
-    WInd2V   ->Fill(*run, *dbWInd2);
-    WCollV   ->Fill(*run, *dbWColl);
-    switch (*dbTrigSource)
+    nEventsPerRun->Fill(run);
+    POTPerRun->Fill(run, pot);
+    nSlicePerEvent->Fill(run, nslc);
+  
+    /*
+    runDuration->Fill(run, dbEnd - dbStart);
+    cathodeV ->Fill(run, dbCath );
+    EInd1V   ->Fill(run, dbEInd1);
+    EInd2V   ->Fill(run, dbEInd2);
+    ECollV   ->Fill(run, dbEColl);
+    WInd1V   ->Fill(run, dbWInd1);
+    WInd2V   ->Fill(run, dbWInd2);
+    WCollV   ->Fill(run, dbWColl);
+    switch (dbTrigSource)
     {
       case 1:
-        ETriggers->Fill(*run);
+        ETriggers->Fill(run);
         break;
       case 2:
-        WTriggers->Fill(*run);
+        WTriggers->Fill(run);
         break;
       case 0:
-        UTriggers->Fill(*run);
+        UTriggers->Fill(run);
         break;
       case 7:
-        BTriggers->Fill(*run);
+        BTriggers->Fill(run);
         break;
       default:
-        std::cerr << "CANNOT RESOLVE TRIGGER SOURCE " << *dbTrigSource << std::endl;
+        std::cerr << "CANNOT RESOLVE TRIGGER SOURCE " << dbTrigSource << std::endl;
         break;
     }
-    //nSlicePerEvent_wgt->Fill(*run, *nslc, *pot);
-    nFlashPerEvent->Fill(*run, *nflash);
-    //nFlashPerEvent_wgt->Fill(*run, *nflash, *pot);
-    //NCRTHit->Fill(*run, *nCRTHit);
-    //NCRTHit_wgt->Fill(*run, *nCRTHit, *pot);
-    //nCRTTrkPerEvent->Fill(*run, *nCRTTrack);
-    //nCRTTrkPerEvent_wgt->Fill(*run, *nCRTTrack, *pot);
-    //nMatchesPerEvent->Fill(*run, *nCRTPMTMatch);
-    //nMatchesPerEvent_wgt->Fill(*run, *nCRTPMTMatch, *pot);
+    */
+    //nSlicePerEvent_wgt->Fill(run, nslc, pot);
+    nFlashPerEvent->Fill(run, nflash);
+    //nFlashPerEvent_wgt->Fill(run, nflash, pot);
+    //NCRTHit->Fill(run, nCRTHit);
+    //NCRTHit_wgt->Fill(run, nCRTHit, pot);
+    //nCRTTrkPerEvent->Fill(run, nCRTTrack);
+    //nCRTTrkPerEvent_wgt->Fill(run, nCRTTrack, pot);
+    //nMatchesPerEvent->Fill(run, nCRTPMTMatch);
+    //nMatchesPerEvent_wgt->Fill(run, nCRTPMTMatch, pot);
 
     // initialize counters/variables
     size_t nClearCosmics = 0;
@@ -463,25 +480,27 @@ void makeHists_db_postgre(std::string inFileName,
     float  crtHitErr = std::numeric_limits<float>::lowest();
 
     // loop over the slices
-    for (size_t slc_idx = 0; slc_idx < *nslc; ++slc_idx)
+    for (size_t slc_idx = 0; slc_idx < nslc; ++slc_idx)
     {
       // Fill simple slice hists
-      nPFPPerEvent->Fill(*run, npfp->at(slc_idx));
-      //nPFPPerEvent_wgt->Fill(*run, npfp->at(slc_idx), *pot);
+      nPFPPerEvent->Fill(run, npfp->at(slc_idx));
+      //nPFPPerEvent_wgt->Fill(run, npfp->at(slc_idx), pot);
 
       // loop over the PFPs
       for (size_t pfp_idx = 0; pfp_idx < npfp->at(slc_idx); ++pfp_idx)
       {
+        //cout<<"slc: "<<slc_idx<<" pfp: "<<pfp_idx<<endl;
+        //cout<<trackLength->size()<<endl;
         // check whether it's better as a track or a shower
-        bool trkGood = (trackLength ->at(slc_idx)[pfp_idx] > 0);
+        bool trkGood = (trackLength->at(slc_idx)[pfp_idx] > 0);
         bool shwGood = (showerLength->at(slc_idx)[pfp_idx] > 0);
         if (not trkGood && not shwGood)
           continue;
 
         // use the shower info only if the track info isn't good
-        float pfpLength = (trkGood) ? trackLength    ->at(slc_idx)[pfp_idx]
-                                    : showerLength   ->at(slc_idx)[pfp_idx];
-        int   pfpPlane  = (trkGood) ? trackBestPlane ->at(slc_idx)[pfp_idx]
+        float pfpLength = (trkGood) ? trackLength->at(slc_idx)[pfp_idx]
+                                    : showerLength->at(slc_idx)[pfp_idx];
+        int   pfpPlane  = (trkGood) ? trackBestPlane->at(slc_idx)[pfp_idx]
                                     : showerBestPlane->at(slc_idx)[pfp_idx];
 
         // get PFP level info
@@ -502,67 +521,67 @@ void makeHists_db_postgre(std::string inFileName,
     }
 
     // loop over flashes
-    for (size_t flsh_idx = 0; flsh_idx < *nflash; ++flsh_idx)
+    for (size_t flsh_idx = 0; flsh_idx < nflash; ++flsh_idx)
     {
-      FlashTimeWidth->Fill(*run, flashTimeWidth->at(flsh_idx));
-      //FlashTimeWidth_wgt->Fill(*run, flashTimeWidth->at(flsh_idx), *pot);
-      FlashTimeSD->Fill(*run, flashTimeSD->at(flsh_idx));
-      //FlashTimeSD_wgt->Fill(*run, flashTimeSD->at(flsh_idx), *pot);
-      FlashPE->Fill(*run, flashPE->at(flsh_idx));
-      //FlashPE_wgt->Fill(*run, flashPE->at(flsh_idx), *pot);
+      FlashTimeWidth->Fill(run, flashTimeWidth->at(flsh_idx));
+      //FlashTimeWidth_wgt->Fill(run, flashTimeWidth->at(flsh_idx), pot);
+      FlashTimeSD->Fill(run, flashTimeSD->at(flsh_idx));
+      //FlashTimeSD_wgt->Fill(run, flashTimeSD->at(flsh_idx), pot);
+      FlashPE->Fill(run, flashPE->at(flsh_idx));
+      //FlashPE_wgt->Fill(run, flashPE->at(flsh_idx), pot);
     }
 
     // loop over CRT hits
-    //for (size_t crt_hit_idx = 0; crt_hit_idx < *nCRTHit; ++crt_hit_idx)
+    //for (size_t crt_hit_idx = 0; crt_hit_idx < nCRTHit; ++crt_hit_idx)
     //{
-    //  CRTHitPEPerHit->Fill(*run, CRTHitPE->at(crt_hit_idx));
-    //  CRTHitPEPerHit_wgt->Fill(*run, CRTHitPE->at(crt_hit_idx), *pot);
+    //  CRTHitPEPerHit->Fill(run, CRTHitPE->at(crt_hit_idx));
+    //  CRTHitPEPerHit_wgt->Fill(run, CRTHitPE->at(crt_hit_idx), pot);
     //  crtHitErr = std::sqrt(std::pow(CRTHitErrX->at(crt_hit_idx), 2)
     //                      + std::pow(CRTHitErrY->at(crt_hit_idx), 2)
     //                      + std::pow(CRTHitErrZ->at(crt_hit_idx), 2));
-    //  avgCRTHitErr->Fill(*run, crtHitErr);
-    //  avgCRTHitErr_wgt->Fill(*run, crtHitErr, *pot);
+    //  avgCRTHitErr->Fill(run, crtHitErr);
+    //  avgCRTHitErr_wgt->Fill(run, crtHitErr, pot);
     //}
 
     // loop over CRT tracks
-    //for (size_t crt_trk_idx = 0; crt_trk_idx < *nCRTTrack; ++crt_trk_idx)
+    //for (size_t crt_trk_idx = 0; crt_trk_idx < nCRTTrack; ++crt_trk_idx)
     //{
-    //  CRTTrkTime->Fill(*run, CRTTrackTime->at(crt_trk_idx));
-    //  CRTTrkTime_wgt->Fill(*run, CRTTrackTime->at(crt_trk_idx), *pot);
+    //  CRTTrkTime->Fill(run, CRTTrackTime->at(crt_trk_idx));
+    //  CRTTrkTime_wgt->Fill(run, CRTTrackTime->at(crt_trk_idx), pot);
     //}
 
     // loop over CRT PMT matches
-    //for (size_t mch_idx = 0; mch_idx < *nCRTPMTMatch; ++mch_idx)
+    //for (size_t mch_idx = 0; mch_idx < nCRTPMTMatch; ++mch_idx)
     //{
-    //  nMchHitsPerEvent->Fill(*run, nCRTPMTMatchHit->at(mch_idx));
-    //  nMchHitsPerEvent_wgt->Fill(*run, nCRTPMTMatchHit->at(mch_idx));
+    //  nMchHitsPerEvent->Fill(run, nCRTPMTMatchHit->at(mch_idx));
+    //  nMchHitsPerEvent_wgt->Fill(run, nCRTPMTMatchHit->at(mch_idx));
     //  // loop over the match hits
     //  for (size_t hit_idx = 0; hit_idx < nCRTPMTMatchHit->at(mch_idx); ++hit_idx)
     //  {
-    //    fmTimeDiff->Fill(*run, nCRTPMTMatchHitTimeDiff->at(mch_idx)[hit_idx]);
-    //    fmTimeDiff_wgt->Fill(*run, nCRTPMTMatchHitTimeDiff->at(mch_idx)[hit_idx], *pot);
+    //    fmTimeDiff->Fill(run, nCRTPMTMatchHitTimeDiff->at(mch_idx)[hit_idx]);
+    //    fmTimeDiff_wgt->Fill(run, nCRTPMTMatchHitTimeDiff->at(mch_idx)[hit_idx], pot);
     //  }
     //}
 
     // fill the more complex ones
-    nCCPerEvent->Fill(*run, nClearCosmics);
-    //nCCPerEvent_wgt->Fill(*run, nClearCosmics, *pot);
-    flashPerCC->Fill(*run, static_cast<double>(*nflash) / static_cast<double>(nClearCosmics));
-    //flashPerCC_wgt->Fill(*run, static_cast<double>(*nflash) / static_cast<double>(nClearCosmics), *pot);
-    nNeutrinoPure->Fill(*run, nNeutrinoCandidate);
-    //nNeutrinoPure_wgt->Fill(*run, nNeutrinoCandidate, *pot);
-    nTrkHitsPlane1->Fill(*run, nTrackHits1);
-    //nTrkHitsPlane1_wgt->Fill(*run, nTrackHits1, *pot);
-    nTrkHitsPlane2->Fill(*run, nTrackHits2);
-    //nTrkHitsPlane2_wgt->Fill(*run, nTrackHits2, *pot);
-    nTrkHitsPlane3->Fill(*run, nTrackHits3);
-    //nTrkHitsPlane3_wgt->Fill(*run, nTrackHits3, *pot);
-    nHitPerTrkPlane1->Fill(*run, static_cast<double>(nTrackHits1) / static_cast<double>(nTracks));
-    //nHitPerTrkPlane1_wgt->Fill(*run, static_cast<double>(nTrackHits1) / static_cast<double>(nTracks), *pot);
-    nHitPerTrkPlane2->Fill(*run, static_cast<double>(nTrackHits2) / static_cast<double>(nTracks));
-    //nHitPerTrkPlane2_wgt->Fill(*run, static_cast<double>(nTrackHits2) / static_cast<double>(nTracks), *pot);
-    nHitPerTrkPlane3->Fill(*run, static_cast<double>(nTrackHits3) / static_cast<double>(nTracks));
-    //nHitPerTrkPlane3_wgt->Fill(*run, static_cast<double>(nTrackHits3) / static_cast<double>(nTracks), *pot);
+    nCCPerEvent->Fill(run, nClearCosmics);
+    //nCCPerEvent_wgt->Fill(run, nClearCosmics, pot);
+    flashPerCC->Fill(run, static_cast<double>(nflash) / static_cast<double>(nClearCosmics));
+    //flashPerCC_wgt->Fill(run, static_cast<double>(nflash) / static_cast<double>(nClearCosmics), pot);
+    nNeutrinoPure->Fill(run, nNeutrinoCandidate);
+    //nNeutrinoPure_wgt->Fill(run, nNeutrinoCandidate, pot);
+    nTrkHitsPlane1->Fill(run, nTrackHits1);
+    //nTrkHitsPlane1_wgt->Fill(run, nTrackHits1, pot);
+    nTrkHitsPlane2->Fill(run, nTrackHits2);
+    //nTrkHitsPlane2_wgt->Fill(run, nTrackHits2, pot);
+    nTrkHitsPlane3->Fill(run, nTrackHits3);
+    //nTrkHitsPlane3_wgt->Fill(run, nTrackHits3, pot);
+    nHitPerTrkPlane1->Fill(run, static_cast<double>(nTrackHits1) / static_cast<double>(nTracks));
+    //nHitPerTrkPlane1_wgt->Fill(run, static_cast<double>(nTrackHits1) / static_cast<double>(nTracks), pot);
+    nHitPerTrkPlane2->Fill(run, static_cast<double>(nTrackHits2) / static_cast<double>(nTracks));
+    //nHitPerTrkPlane2_wgt->Fill(run, static_cast<double>(nTrackHits2) / static_cast<double>(nTracks), pot);
+    nHitPerTrkPlane3->Fill(run, static_cast<double>(nTrackHits3) / static_cast<double>(nTracks));
+    //nHitPerTrkPlane3_wgt->Fill(run, static_cast<double>(nTrackHits3) / static_cast<double>(nTracks), pot);
   }
 
   outFile->Write();

@@ -305,8 +305,11 @@ void makeTTree_db_postgre(std::string srFileName, std::string outFileName, bool 
   std::vector<size_t> sizeCRTTrackArr(srTree->GetEntries(), 0);
   std::vector<size_t> sizeCRTPMTMatchArr(srTree->GetEntries(), 0);
   std::vector<size_t> sizeCRTPMTMatchHitArr(srTree->GetEntries(), 0);
+  cout<<"First entry loop"<<endl;
+  double nentries=srTree->GetEntries();
   for (size_t evt = 0; evt < srTree->GetEntries(); ++evt)
   {
+    if(evt%10000==0) cout<<"Entry "<<evt<< "/"<<nentries<<"\t "<<100.*evt/nentries<<"% done in first loop."<<endl;
     int srbNSlices;
     srTree->SetBranchAddress("rec.nslc", &srbNSlices);
     int srbNOpFlashes;
@@ -463,9 +466,12 @@ void makeTTree_db_postgre(std::string srFileName, std::string outFileName, bool 
   outTree->Branch("db.gateType", &dbGateType);
   outTree->Branch("db.trigSource", &dbTrigSource);
 
+
+  cout<<"Second loop over all entries."<<endl;
   // loop over events
   for (size_t evt = 0; evt < srTree->GetEntries(); ++evt)
   {
+    if(evt%10000==0) cout<<"Entry "<<evt<< "/"<<nentries<<"\t "<<100.*evt/nentries<<"% done in first loop."<<endl;
     // set up the vars
     unsigned int srbRun;
     srTree->SetBranchAddress("rec.hdr.run", &srbRun);
